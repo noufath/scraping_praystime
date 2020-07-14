@@ -1,12 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
-# import pandas as pd
+import pandas as pd
 
 
 class GetData():
-    def __init__(self, url_address):
-        self.url_address = url_address
-        self.url_response = requests.get(url_address)
+    def __init__(self, url_name):
+        self.url = url_name
+        self.url_response = requests.get(self.url)
 
     def scrap_status(self):
         return self.url_response.status_code
@@ -17,7 +17,7 @@ class GetData():
     def parsed_body(self):
         return self.parsed_html().find('body')
 
-    def listkota(self):
+    def citylist(self):
         """
         Get List Kota
         """
@@ -36,6 +36,23 @@ class GetData():
         value = [o.get("value") for o in options]
 
         # store to dictionary
-        list_kota = dict(zip(value, city))
+        citylist = dict(zip(value, city))
+        return citylist
 
-        return list_kota
+    def get_waktusholat(self):
+        ws_header = self.parsed_body().find('tr','table_header')
+        ws_waktusholat = ws_header.find_all('b')
+        waktusholat = [y.text for y in ws_waktusholat]
+        return waktusholat
+
+    def get_jadwalsholat(self):
+        js_raw = self.parsed_body().find('tr','table_highlight')
+        js_jamsholat = js_raw.find_all('td')
+        jamsholat = [y.text for y in js_jamsholat]
+        return jamsholat
+
+    def disp_jadwalsholat(self):
+        waktu_sholat = self.get_waktusholat()
+        jam_sholat = self.get_jadwalsholat()
+
+        return pd.DataFrame({'Waktu SHolat': waktu_sholat[1:], 'Jam Sholat': jam_sholat[1:]})
